@@ -169,16 +169,22 @@ export const Home = () => {
           Upload a Meme
         </Button>
         <div className="flex flex-col mt-20 mx-auto justify-center items-start">
-          {orderBy(messages, ["timestamp"]).map((message, index) => {
-            const isLastMessage = index === messages.length - 1;
-            return (
-              <RenderMeme
-                ref={isLastMessage ? ref : null}
-                message={message}
-                key={message.timestamp?.getTime().toString()}
-              />
-            );
-          })}
+          {messages.length > 0 &&
+            orderBy(messages, ["timestamp"]).map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              return (
+                <RenderMeme
+                  ref={isLastMessage ? ref : null}
+                  message={message}
+                  key={message.timestamp?.getTime().toString()}
+                />
+              );
+            })}
+          {messages.length === 0 && (
+            <span className="flex items-center justify-center">
+              No Memes found :(
+            </span>
+          )}
         </div>
       </div>
       <Dialog
