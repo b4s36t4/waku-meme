@@ -203,7 +203,7 @@ export const Home = () => {
             max={1}
             ref={inputRef}
             type="file"
-            accept="image/*,video/*"
+            accept="image/*"
             className="hidden"
           />
           <textarea
