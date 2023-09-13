@@ -15,7 +15,7 @@ export const RenderMeme = memo(
       return decodePayload(message.payload);
     }, [decodePayload, message.payload]);
 
-    const url = `https://olive-prominent-asp-641.mypinata.cloud/ipfs/${meme.hash}`;
+    const url = `https://ipfs.io/ipfs/${meme.hash}`;
 
     const openMeme = () => {
       window.open(url);

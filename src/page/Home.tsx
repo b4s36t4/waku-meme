@@ -19,7 +19,7 @@ import {
 } from "@waku/react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { uploadFile } from "@/lib/uploadFileToPinata";
+import { uploadFile } from "@/lib/uploadFile";
 import { useGeneratePayload } from "@/hooks/useGeneratePayload";
 import { Cursor, IDecodedMessage, PageDirection, waku } from "@waku/sdk";
 import { WakuFilterNode, WakuPushNode, WakuStoreNode } from "@/type";
@@ -124,9 +124,10 @@ export const Home = () => {
 
     if (!file) return;
 
-    const res = await uploadFile(file, JSON.stringify({ name: file.name }));
+    const res = await uploadFile(file, file.name);
+    console.log(res, typeof res);
     setUploading(false);
-    return res["IpfsHash"] as string;
+    return res["Hash"] as string;
   }, [file]);
 
   // Show loading progress when Message is being generated.
