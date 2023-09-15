@@ -1,6 +1,5 @@
 import { toast } from "react-hot-toast";
 import uniq from "lodash/uniq";
-import orderBy from "lodash/orderBy";
 import {
   ChangeEventHandler,
   useCallback,
@@ -9,7 +8,6 @@ import {
   useState,
 } from "react";
 import { useInView } from "react-intersection-observer";
-import { Button } from "@/components/ui/button";
 import {
   useWaku,
   useContentPair,
@@ -17,13 +15,15 @@ import {
   useFilterMessages,
   useLightPush,
 } from "@waku/react";
+import { Cursor, IDecodedMessage, PageDirection, waku } from "@waku/sdk";
 
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { uploadFile } from "@/lib/uploadFile";
 import { useGeneratePayload } from "@/hooks/useGeneratePayload";
-import { Cursor, IDecodedMessage, PageDirection, waku } from "@waku/sdk";
 import { WakuFilterNode, WakuPushNode, WakuStoreNode } from "@/type";
 import { RenderMeme } from "@/components/Meme";
+import sortBy from "lodash/sortBy";
 
 const PAGE_SIZE = 10;
 
@@ -87,7 +87,6 @@ export const Home = () => {
   const calculateCursor = useCallback(async () => {
     const lastMessage = messages[messages.length - 1];
     const _cursor = await waku.createCursor(lastMessage);
-    console.log(_cursor, "cur");
     setCursor(_cursor);
   }, [messages]);
 
@@ -124,8 +123,7 @@ export const Home = () => {
 
     if (!file) return;
 
-    const res = await uploadFile(file, file.name);
-    console.log(res, typeof res);
+    const res = await uploadFile(file);
     setUploading(false);
     return res["Hash"] as string;
   }, [file]);
@@ -138,7 +136,10 @@ export const Home = () => {
       error: "Failed to upload your meme",
     });
 
-    if (!hash) return;
+    if (!hash) {
+      setUploading(false);
+      return;
+    }
 
     // Convert payload into protobuffers
     const payload = generatePayload({
@@ -171,16 +172,18 @@ export const Home = () => {
         </Button>
         <div className="flex flex-col mt-20 mx-auto justify-center items-start">
           {messages.length > 0 &&
-            orderBy(messages, ["timestamp"]).map((message, index) => {
-              const isLastMessage = index === messages.length - 1;
-              return (
-                <RenderMeme
-                  ref={isLastMessage ? ref : null}
-                  message={message}
-                  key={message.timestamp?.getTime().toString()}
-                />
-              );
-            })}
+            sortBy(messages, (message) => message.timestamp)
+              .reverse()
+              .map((message, index) => {
+                const isLastMessage = index === messages.length - 1;
+                return (
+                  <RenderMeme
+                    ref={isLastMessage ? ref : null}
+                    message={message}
+                    key={message.timestamp?.getTime().toString()}
+                  />
+                );
+              })}
           {messages.length === 0 && (
             <span className="flex items-center justify-center">
               No Memes found :(
@@ -190,7 +193,10 @@ export const Home = () => {
       </div>
       <Dialog
         open={uploadEnabled}
-        onOpenChange={(open) => setUploadEnabled(open)}
+        onOpenChange={(open) => {
+          setUploadEnabled(open);
+          setUploading(false);
+        }}
       >
         <DialogContent>
           <p>Upload your favorite meme</p>

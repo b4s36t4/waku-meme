@@ -2,10 +2,14 @@ import { IDecodedMessage } from "@waku/sdk";
 import { forwardRef, memo, useMemo } from "react";
 
 import { useDecodePayload } from "@/hooks/useGeneratePayload";
+import { format } from "date-fns";
 
 interface Props {
   message: IDecodedMessage;
 }
+
+const GATEWAY =
+  import.meta.env.REACT_APP_IPFS_GATEWAY || "https://ipfs.io/ipfs/";
 
 export const RenderMeme = memo(
   forwardRef<HTMLDivElement, Props>(({ message }, ref) => {
@@ -15,24 +19,24 @@ export const RenderMeme = memo(
       return decodePayload(message.payload);
     }, [decodePayload, message.payload]);
 
-    const url = `https://ipfs.io/ipfs/${meme.hash}`;
+    const url = `${GATEWAY}${meme.hash}`;
 
     const openMeme = () => {
       window.open(url);
     };
 
-    console.log(ref, "ref");
-
     return (
       <div
         ref={ref}
         onClick={openMeme}
-        className="w-[500px] mb-4 mr-4 cursor-pointer group group-hover:border-0 rounded-xl px-4 py-2 h-full transition-all duration-150 ease-in-out flex flex-col space-y-2 relative border-2 border-gray-300"
+        className="w-[500px] mb-4 mr-4 cursor-pointer group group-hover:border-0 hover:border-0 rounded-xl px-4 py-2 h-full transition-all duration-150 ease-in-out flex flex-col space-y-2 relative border-2 border-gray-300"
       >
         <img src={url} alt={meme.description} />
 
         <div>
-          <p className="text-xs">Posted On: {meme.timestamp}</p>
+          <p className="text-xs">
+            Posted On: {format(new Date(Number(meme.timestamp)), "dd-mm-yyyy")}
+          </p>
           <p className="text-sm font-bold">{meme.description}</p>
         </div>
         <div className="absolute bg-black hidden group-hover:block w-full rounded-xl !m-0 h-full inset-0 opacity-40">

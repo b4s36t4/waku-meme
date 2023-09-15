@@ -7,8 +7,6 @@ import "./index.css";
 
 window.global = globalThis;
 
-console.log(import.meta, "meta");
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <LightNodeProvider
