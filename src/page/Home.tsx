@@ -24,6 +24,7 @@ import { useGeneratePayload } from "@/hooks/useGeneratePayload";
 import { WakuFilterNode, WakuPushNode, WakuStoreNode } from "@/type";
 import { RenderMeme } from "@/components/Meme";
 import sortBy from "lodash/sortBy";
+import { getIPFSURL, saveIPFSURL } from "@/lib/storage";
 
 const PAGE_SIZE = 10;
 
@@ -50,6 +51,11 @@ export const Home = () => {
   // Waku hooks to communicate with waku service
   const { decoder, encoder } = useContentPair();
 
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Default Brave IPFS localnode
+  const [ipfsURL, setIPFSURL] = useState("http://127.0.0.1:48080");
+
   const { messages: storedMessages, isLoading: isStoredMessageLoading } =
     useStoreMessages({
       // Casting the type because of type mis-match
@@ -75,6 +81,15 @@ export const Home = () => {
       setMessages([]);
     };
   }, [filteredMessages]);
+
+  useEffect(() => {
+    const token = getIPFSURL();
+    if (!token) {
+      setSettingsOpen(true);
+      return;
+    }
+    setIPFSURL(token);
+  }, []);
 
   useEffect(() => {
     // Merge newly created memes at the end.
@@ -170,6 +185,14 @@ export const Home = () => {
         >
           Upload a Meme
         </Button>
+        <Button
+          onClick={() => {
+            setSettingsOpen(true);
+          }}
+          className="fixed top-10 right-4 mx-auto"
+        >
+          &#9881;
+        </Button>
         <div className="flex flex-col mt-20 mx-auto justify-center items-start">
           {messages.length > 0 &&
             sortBy(messages, (message) => message.timestamp)
@@ -191,6 +214,38 @@ export const Home = () => {
           )}
         </div>
       </div>
+      <Dialog
+        open={settingsOpen}
+        onOpenChange={(open) => {
+          setSettingsOpen(open);
+        }}
+      >
+        <DialogContent>
+          <div>
+            <p>Configure IPFS Gateway</p>
+            <input
+              className="w-fill mt-2 p-1 px-2 border-[1px] outline-none rounded-md"
+              placeholder="ipfs.io"
+              type="url"
+              value={ipfsURL}
+              onChange={(e) => {
+                setIPFSURL(e.target.value);
+              }}
+            />
+            <Button
+              style={{ marginLeft: 10 }}
+              onClick={() => {
+                saveIPFSURL(ipfsURL);
+                setSettingsOpen(false);
+                // Take effect of updated IPFS URL
+                window.location.reload();
+              }}
+            >
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={uploadEnabled}
         onOpenChange={(open) => {

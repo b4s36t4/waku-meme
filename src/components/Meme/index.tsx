@@ -3,17 +3,23 @@ import { forwardRef, memo, useMemo } from "react";
 
 import { useDecodePayload } from "@/hooks/useGeneratePayload";
 import { format } from "date-fns";
+import { getIPFSURL } from "@/lib/storage";
 
 interface Props {
   message: IDecodedMessage;
 }
 
-const GATEWAY =
-  import.meta.env.REACT_APP_IPFS_GATEWAY || "https://ipfs.io/ipfs/";
+// Default to brave Gateway
+const DEFAULT_GATEWAY = "http://127.0.0.48080/ipfs/";
 
 export const RenderMeme = memo(
   forwardRef<HTMLDivElement, Props>(({ message }, ref) => {
     const decodePayload = useDecodePayload();
+
+    const GATEWAY = useMemo(() => {
+      const savedURL = getIPFSURL();
+      return savedURL ? savedURL + "/ipfs/" : DEFAULT_GATEWAY;
+    }, []);
 
     const meme = useMemo(() => {
       return decodePayload(message.payload);
