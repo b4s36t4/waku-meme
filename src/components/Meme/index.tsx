@@ -3,7 +3,7 @@ import { forwardRef, memo, useMemo } from "react";
 
 import { useDecodePayload } from "@/hooks/useGeneratePayload";
 import { format } from "date-fns";
-import { getIPFSURL } from "@/lib/storage";
+import { getIPFSGateway } from "@/lib/storage";
 
 interface Props {
   message: IDecodedMessage;
@@ -17,7 +17,7 @@ export const RenderMeme = memo(
     const decodePayload = useDecodePayload();
 
     const GATEWAY = useMemo(() => {
-      const savedURL = getIPFSURL();
+      const savedURL = getIPFSGateway();
       return savedURL ? savedURL + "/ipfs/" : DEFAULT_GATEWAY;
     }, []);
 

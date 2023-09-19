@@ -1,9 +1,11 @@
 import axios from "axios";
+import { getIPFSAPI } from "./storage";
 
-const url: string = import.meta.env.REACT_APP_IPFS_API;
+const defaultEnvUrl: string = import.meta.env.REACT_APP_IPFS_API;
 
 export const uploadFile = async (file: File) => {
-  if (!url) {
+  const uploadURL = getIPFSAPI() ? getIPFSAPI() : defaultEnvUrl;
+  if (!uploadURL) {
     throw new Error("No IPFS upload URL provided");
   }
   const formData = new FormData();
@@ -11,7 +13,7 @@ export const uploadFile = async (file: File) => {
   formData.append("file", file);
 
   try {
-    const { data } = await axios.post(url, formData, {
+    const { data } = await axios.post(`${uploadURL}/api/v0/add`, formData, {
       headers: {
         "Content-Type": "application/octet-stream",
       },

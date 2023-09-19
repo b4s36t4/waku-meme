@@ -24,7 +24,12 @@ import { useGeneratePayload } from "@/hooks/useGeneratePayload";
 import { WakuFilterNode, WakuPushNode, WakuStoreNode } from "@/type";
 import { RenderMeme } from "@/components/Meme";
 import sortBy from "lodash/sortBy";
-import { getIPFSURL, saveIPFSURL } from "@/lib/storage";
+import {
+  getIPFSAPI,
+  getIPFSGateway,
+  saveIPFSGateway,
+  saveIPFSAPI,
+} from "@/lib/storage";
 
 const PAGE_SIZE = 10;
 
@@ -55,6 +60,7 @@ export const Home = () => {
 
   // Default Brave IPFS localnode
   const [ipfsURL, setIPFSURL] = useState("http://127.0.0.1:48080");
+  const [ipfsAPI, setIPFSAPI] = useState("http://127.0.0.1:45001");
 
   const { messages: storedMessages, isLoading: isStoredMessageLoading } =
     useStoreMessages({
@@ -83,12 +89,14 @@ export const Home = () => {
   }, [filteredMessages]);
 
   useEffect(() => {
-    const token = getIPFSURL();
-    if (!token) {
+    const gateway = getIPFSGateway();
+    const _ipfsAPI = getIPFSAPI();
+    if (!gateway || !_ipfsAPI) {
       setSettingsOpen(true);
       return;
     }
-    setIPFSURL(token);
+    setIPFSURL(gateway);
+    setIPFSAPI(_ipfsAPI);
   }, []);
 
   useEffect(() => {
@@ -222,27 +230,45 @@ export const Home = () => {
       >
         <DialogContent>
           <div>
-            <p>Configure IPFS Gateway</p>
-            <input
-              className="w-fill mt-2 p-1 px-2 border-[1px] outline-none rounded-md"
-              placeholder="ipfs.io"
-              type="url"
-              value={ipfsURL}
-              onChange={(e) => {
-                setIPFSURL(e.target.value);
-              }}
-            />
-            <Button
-              style={{ marginLeft: 10 }}
-              onClick={() => {
-                saveIPFSURL(ipfsURL);
-                setSettingsOpen(false);
-                // Take effect of updated IPFS URL
-                window.location.reload();
-              }}
-            >
-              Save
-            </Button>
+            <p>Configure IPFS API & Gateway</p>
+            <div className="flex flex-col w-full">
+              <p>Enter IPFS API URL</p>
+              <input
+                className="w-fill mt-2 p-1 px-2 border-[1px] outline-none rounded-md"
+                placeholder="http://localhost:45001"
+                type="url"
+                value={ipfsAPI}
+                onChange={(e) => {
+                  setIPFSAPI(e.target.value);
+                }}
+              />
+              <p>Enter IPFS Gateway URL</p>
+              <input
+                className="w-fill mt-2 p-1 px-2 border-[1px] outline-none rounded-md"
+                placeholder="ipfs.io"
+                type="url"
+                value={ipfsURL}
+                onChange={(e) => {
+                  setIPFSURL(e.target.value);
+                }}
+              />
+              <Button
+                className="mt-2"
+                onClick={() => {
+                  if (!ipfsURL || !ipfsAPI) {
+                    toast.error("Please enter values");
+                    return;
+                  }
+                  saveIPFSGateway(ipfsURL);
+                  saveIPFSAPI(ipfsAPI);
+                  setSettingsOpen(false);
+                  // Take effect of updated IPFS URL
+                  window.location.reload();
+                }}
+              >
+                Save
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
