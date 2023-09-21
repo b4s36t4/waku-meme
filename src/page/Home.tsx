@@ -16,6 +16,8 @@ import {
   useLightPush,
 } from "@waku/react";
 import { Cursor, IDecodedMessage, PageDirection, waku } from "@waku/sdk";
+import sortBy from "lodash/sortBy";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -23,7 +25,6 @@ import { uploadFile } from "@/lib/uploadFile";
 import { useGeneratePayload } from "@/hooks/useGeneratePayload";
 import { WakuFilterNode, WakuPushNode, WakuStoreNode } from "@/type";
 import { RenderMeme } from "@/components/Meme";
-import sortBy from "lodash/sortBy";
 import {
   getIPFSAPI,
   getIPFSGateway,
@@ -32,6 +33,8 @@ import {
 } from "@/lib/storage";
 
 const PAGE_SIZE = 10;
+const IMAGE_HASH =
+  "bafybeibwzifw52ttrkqlikfzext5akxu7lz4xiwjgwzmqcpdzmp3n5vnbe";
 
 export const Home = () => {
   // Waku node hook
@@ -57,6 +60,7 @@ export const Home = () => {
   const { decoder, encoder } = useContentPair();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Default Brave IPFS localnode
   const [ipfsURL, setIPFSURL] = useState("http://127.0.0.1:48080");
@@ -181,16 +185,34 @@ export const Home = () => {
   };
 
   const onSave = async () => {
+    setSaving(true);
     if (!ipfsURL || !ipfsAPI) {
       toast.error("Please enter values");
+      return;
+    }
+
+    try {
+      await axios.post(`${ipfsAPI}/api/v0/id`);
+    } catch {
+      toast.error("Please check IPFS API Endpoint");
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await axios.get(`${ipfsURL}/ipfs/${IMAGE_HASH}`);
+    } catch (error) {
+      toast.error("Please check IPFS Gateway provided");
+      setSaving(false);
       return;
     }
 
     saveIPFSGateway(ipfsURL);
     saveIPFSAPI(ipfsAPI);
     setSettingsOpen(false);
+    setSaving(false);
     // Take effect of updated IPFS URL
-    // window.location.reload();
+    window.location.reload();
   };
 
   const isLoading = isFilterLoading || isStoredMessageLoading || !node;
@@ -269,8 +291,8 @@ export const Home = () => {
                   setIPFSURL(e.target.value);
                 }}
               />
-              <Button className="mt-2" onClick={onSave}>
-                Save
+              <Button className="mt-2" disabled={saving} onClick={onSave}>
+                {saving ? "Checking..." : "Save"}
               </Button>
             </div>
           </div>
