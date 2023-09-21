@@ -148,6 +148,10 @@ export const Home = () => {
 
     const res = await uploadFile(file);
     setUploading(false);
+    if (res["error"]) {
+      throw new Error("Failed to upload meme, re-check IPFS API Endpoint");
+    }
+
     return res["Hash"] as string;
   }, [file]);
 
@@ -174,6 +178,19 @@ export const Home = () => {
     // Send message.
     push?.({ payload });
     setUploadEnabled(false);
+  };
+
+  const onSave = async () => {
+    if (!ipfsURL || !ipfsAPI) {
+      toast.error("Please enter values");
+      return;
+    }
+
+    saveIPFSGateway(ipfsURL);
+    saveIPFSAPI(ipfsAPI);
+    setSettingsOpen(false);
+    // Take effect of updated IPFS URL
+    // window.location.reload();
   };
 
   const isLoading = isFilterLoading || isStoredMessageLoading || !node;
@@ -252,20 +269,7 @@ export const Home = () => {
                   setIPFSURL(e.target.value);
                 }}
               />
-              <Button
-                className="mt-2"
-                onClick={() => {
-                  if (!ipfsURL || !ipfsAPI) {
-                    toast.error("Please enter values");
-                    return;
-                  }
-                  saveIPFSGateway(ipfsURL);
-                  saveIPFSAPI(ipfsAPI);
-                  setSettingsOpen(false);
-                  // Take effect of updated IPFS URL
-                  window.location.reload();
-                }}
-              >
+              <Button className="mt-2" onClick={onSave}>
                 Save
               </Button>
             </div>
